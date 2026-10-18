@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import {
   OpenLibrarySearchResponse,
   OpenLibraryWorkResponse
-} from '../types/bookTypes.js';
+} from '../types/openLibraryTypes.js';
 import { logger } from '../utils/logger.js';
 import { helpers } from '../utils/helpers.js';
 
@@ -30,7 +30,8 @@ export const openLibraryService = {
         params: {
           q: keyword,
           page,
-          limit
+          limit,
+          fields: 'key,title,author_name,first_publish_year,cover_i,number_of_pages_median,subject'
         }
       });
       return response.data;

@@ -29,5 +29,21 @@ export const helpers = {
       return description.value.trim() || null;
     }
     return null;
+  },
+
+  /**
+   * Parse an toàn subjects từ DB (dạng JSON string hoặc mảng) thành string[]
+   */
+  parseSubjects(raw: unknown): string[] {
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
   }
 };

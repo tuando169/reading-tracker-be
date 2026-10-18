@@ -14,15 +14,5 @@ export const bookController = {
     } catch (error) {
       next(error);
     }
-  },
-
-  async getBookDetail(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const workId = String(req.params.workId);
-      const result = await bookService.getBookDetail(workId);
-      res.status(200).json(helpers.successResponse(result));
-    } catch (error) {
-      next(error);
-    }
   }
 };

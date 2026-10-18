@@ -57,18 +57,6 @@ const swaggerOptions: swaggerJSDoc.Options = {
             workId: { type: 'string', example: 'OL82563W' },
             title: { type: 'string', example: "Harry Potter and the Philosopher's Stone" },
             author: { type: 'string', nullable: true, example: 'J. K. Rowling' },
-            publishYear: { type: 'integer', nullable: true, example: 1997 },
-            coverUrl: { type: 'string', nullable: true, example: 'https://covers.openlibrary.org/b/id/10521270-M.jpg' },
-            inLibrary: { type: 'boolean', example: true }
-          }
-        },
-        BookDetail: {
-          type: 'object',
-          properties: {
-            id: { type: 'integer', nullable: true, example: 1 },
-            workId: { type: 'string', example: 'OL82563W' },
-            title: { type: 'string', example: "Harry Potter and the Philosopher's Stone" },
-            author: { type: 'string', nullable: true, example: 'J. K. Rowling' },
             description: { type: 'string', nullable: true, example: 'Harry Potter has never even heard of Hogwarts...' },
             publishYear: { type: 'integer', nullable: true, example: 1997 },
             totalPages: { type: 'integer', nullable: true, example: 223 },
@@ -77,8 +65,7 @@ const swaggerOptions: swaggerJSDoc.Options = {
               items: { type: 'string' },
               example: ['Fantasy', 'Magic']
             },
-            coverUrl: { type: 'string', nullable: true, example: 'https://covers.openlibrary.org/b/id/10521270-M.jpg' },
-            inLibrary: { type: 'boolean', example: false }
+            coverUrl: { type: 'string', nullable: true, example: 'https://covers.openlibrary.org/b/id/10521270-M.jpg' }
           }
         },
         LibraryBook: {

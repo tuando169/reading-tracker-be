@@ -6,6 +6,6 @@ export const ReadingStatusEnum = {
 
 export type ReadingStatusType = (typeof ReadingStatusEnum)[keyof typeof ReadingStatusEnum];
 
-export const DEFAULT_PAGE = 1;
-export const DEFAULT_LIMIT = 20;
-export const MAX_LIMIT = 50;
+export const DefaultPage = 1;
+export const DefaultLimit = 20;
+export const MaxLimit = 50;

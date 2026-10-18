@@ -22,14 +22,14 @@ export const libraryRepository = {
   /**
    * Tìm nhiều bản ghi theo danh sách workIds
    */
-  async findByWorkIds(workIds: string[]): Promise<Array<{ id: number; work_id: string }>> {
+  async findByWorkIds(workIds: string[]): Promise<LibraryBookRecord[]> {
     if (!workIds.length) return [];
     const placeholders = workIds.map(() => '?').join(',');
     const [rows] = await pool.execute<RowDataPacket[]>(
-      `SELECT id, work_id FROM books WHERE work_id IN (${placeholders})`,
+      `SELECT * FROM books WHERE work_id IN (${placeholders})`,
       workIds
     );
-    return rows as Array<{ id: number; work_id: string }>;
+    return rows as LibraryBookRecord[];
   },
 
   /**
