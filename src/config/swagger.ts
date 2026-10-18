@@ -15,10 +15,23 @@ const swaggerOptions: swaggerJSDoc.Options = {
       }
     },
     servers: [
-      {
-        url: `http://localhost:${env.PORT}/api/v1`,
-        description: 'Local Development Server'
-      }
+      ...(env.NODE_ENV === 'production'
+        ? [
+            {
+              url: 'https://reading-tracker-be.onrender.com/api/v1',
+              description: 'Production Server (Render)'
+            }
+          ]
+        : [
+            {
+              url: `http://localhost:${env.PORT}/api/v1`,
+              description: 'Local Development Server'
+            },
+            {
+              url: 'https://reading-tracker-be.onrender.com/api/v1',
+              description: 'Production Server (Render)'
+            }
+          ])
     ],
     components: {
       schemas: {
