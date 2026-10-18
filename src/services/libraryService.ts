@@ -73,6 +73,11 @@ export const libraryService = {
       }
     } catch {}
 
+    const currentPage =
+      status === ReadingStatusEnum.Completed && totalPages
+        ? totalPages
+        : 0;
+
     await libraryRepository.create({
       id: cleanId,
       title,
@@ -83,6 +88,7 @@ export const libraryService = {
       totalPages,
       subjects,
       status,
+      currentPage,
     });
 
     const createdRecord = await libraryRepository.findById(cleanId);
@@ -93,28 +99,9 @@ export const libraryService = {
     return formatLibraryResponse(createdRecord);
   },
 
-  async getLibrary(
-    status?: number,
-    page: number = 1,
-    limit: number = 20,
-  ): Promise<{ data: LibraryBookResponse[]; meta: PaginationMeta }> {
-    const { items, total } = await libraryRepository.findMany(
-      status,
-      page,
-      limit,
-    );
-    const data = items.map(formatLibraryResponse);
-    const totalPages = Math.ceil(total / limit) || 0;
-
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
-    };
+  async getLibrary(): Promise<LibraryBookResponse[]> {
+    const items = await libraryRepository.getAll();
+    return items.map(formatLibraryResponse);
   },
 
   async updateProgress(
@@ -231,6 +218,7 @@ function formatLibraryResponse(record: LibraryBookRecord): LibraryBookResponse {
     coverUrl: record.cover_url,
     description: record.description,
     publishYear: record.publish_year,
+    subjects: helpers.parseSubjects(record.subjects),
     status: record.status,
     currentPage,
     totalPages,

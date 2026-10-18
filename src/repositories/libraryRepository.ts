@@ -1,10 +1,11 @@
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
-import { pool } from '../config/database.js';
+import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { pool } from "../config/database.js";
 import {
   LibraryBookRecord,
   CreateLibraryBookDTO,
-  UpdateLibraryBookDTO
-} from '../types/libraryTypes.js';
+  UpdateLibraryBookDTO,
+} from "../types/libraryTypes.js";
+import { ReadingStatusEnum } from "../config/constants.js";
 
 export const libraryRepository = {
   /**
@@ -12,8 +13,8 @@ export const libraryRepository = {
    */
   async findById(id: string): Promise<LibraryBookRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT * FROM books WHERE id = ? LIMIT 1',
-      [id]
+      "SELECT * FROM books WHERE id = ? LIMIT 1",
+      [id],
     );
     if (!rows.length) return null;
     return rows[0] as LibraryBookRecord;
@@ -24,10 +25,10 @@ export const libraryRepository = {
    */
   async findByIds(ids: string[]): Promise<LibraryBookRecord[]> {
     if (!ids.length) return [];
-    const placeholders = ids.map(() => '?').join(',');
+    const placeholders = ids.map(() => "?").join(",");
     const [rows] = await pool.execute<RowDataPacket[]>(
       `SELECT * FROM books WHERE id IN (${placeholders})`,
-      ids
+      ids,
     );
     return rows as LibraryBookRecord[];
   },
@@ -36,7 +37,14 @@ export const libraryRepository = {
    * Thêm sách mới vào tủ
    */
   async create(data: CreateLibraryBookDTO): Promise<string> {
-    const startedAt = data.status === 1 ? new Date() : null;
+    const startedAt =
+      data.status === ReadingStatusEnum.Reading ||
+      data.status === ReadingStatusEnum.Completed
+        ? new Date()
+        : null;
+    const finishedAt =
+      data.status === ReadingStatusEnum.Completed ? new Date() : null;
+    const currentPage = data.currentPage ?? 0;
     const subjectsJson = JSON.stringify(data.subjects || []);
 
     await pool.execute<ResultSetHeader>(
@@ -44,7 +52,7 @@ export const libraryRepository = {
         id, title, author, cover_url, description, 
         publish_year, total_pages, subjects, status, current_page, 
         rating, note, started_at, finished_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, '', ?, NULL)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '', ?, ?)`,
       [
         data.id,
         data.title,
@@ -55,47 +63,20 @@ export const libraryRepository = {
         data.totalPages,
         subjectsJson,
         data.status,
-        startedAt
-      ]
+        currentPage,
+        startedAt,
+        finishedAt,
+      ],
     );
 
     return data.id;
   },
 
-  /**
-   * Lấy danh sách sách có phân trang và lọc theo status
-   */
-  async findMany(
-    status?: number,
-    page: number = 1,
-    limit: number = 20
-  ): Promise<{ items: LibraryBookRecord[]; total: number }> {
-    const offset = (page - 1) * limit;
-
-    let countSql = 'SELECT COUNT(*) as total FROM books';
-    let selectSql = 'SELECT * FROM books';
-    const params: any[] = [];
-
-    if (status !== undefined) {
-      countSql += ' WHERE status = ?';
-      selectSql += ' WHERE status = ?';
-      params.push(status);
-    }
-
-    selectSql += ' ORDER BY updated_at DESC LIMIT ? OFFSET ?';
-
-    const [countRows] = await pool.execute<RowDataPacket[]>(countSql, params);
-    const total = Number(countRows[0]?.total || 0);
-
-    const [items] = await pool.query<RowDataPacket[]>(
-      selectSql,
-      [...params, limit, offset]
+  async getAll(): Promise<LibraryBookRecord[]> {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT * FROM books ORDER BY updated_at DESC",
     );
-
-    return {
-      items: items as LibraryBookRecord[],
-      total
-    };
+    return rows as LibraryBookRecord[];
   },
 
   /**
@@ -110,33 +91,33 @@ export const libraryRepository = {
       note?: string;
       startedAt?: Date | null;
       finishedAt?: Date | null;
-    }
+    },
   ): Promise<boolean> {
     const fields: string[] = [];
     const values: any[] = [];
 
     if (data.status !== undefined) {
-      fields.push('status = ?');
+      fields.push("status = ?");
       values.push(data.status);
     }
     if (data.currentPage !== undefined) {
-      fields.push('current_page = ?');
+      fields.push("current_page = ?");
       values.push(data.currentPage);
     }
     if (data.rating !== undefined) {
-      fields.push('rating = ?');
+      fields.push("rating = ?");
       values.push(data.rating);
     }
     if (data.note !== undefined) {
-      fields.push('note = ?');
+      fields.push("note = ?");
       values.push(data.note);
     }
     if (data.startedAt !== undefined) {
-      fields.push('started_at = ?');
+      fields.push("started_at = ?");
       values.push(data.startedAt);
     }
     if (data.finishedAt !== undefined) {
-      fields.push('finished_at = ?');
+      fields.push("finished_at = ?");
       values.push(data.finishedAt);
     }
 
@@ -144,8 +125,8 @@ export const libraryRepository = {
 
     values.push(id);
     const [result] = await pool.execute<ResultSetHeader>(
-      `UPDATE books SET ${fields.join(', ')} WHERE id = ?`,
-      values
+      `UPDATE books SET ${fields.join(", ")} WHERE id = ?`,
+      values,
     );
 
     return result.affectedRows > 0;
@@ -156,9 +137,9 @@ export const libraryRepository = {
    */
   async delete(id: string): Promise<boolean> {
     const [result] = await pool.execute<ResultSetHeader>(
-      'DELETE FROM books WHERE id = ?',
-      [id]
+      "DELETE FROM books WHERE id = ?",
+      [id],
     );
     return result.affectedRows > 0;
-  }
+  },
 };

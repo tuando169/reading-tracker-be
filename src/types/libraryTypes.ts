@@ -26,6 +26,7 @@ export interface LibraryBookResponse {
   coverUrl: string | null;
   description?: string | null;
   publishYear?: number | null;
+  subjects: string[];
   status: ReadingStatusType;
   currentPage: number;
   totalPages: number | null;
@@ -48,6 +49,7 @@ export interface CreateLibraryBookDTO {
   totalPages: number | null;
   subjects: string[];
   status: ReadingStatusType;
+  currentPage?: number;
 }
 
 export interface UpdateLibraryBookDTO {

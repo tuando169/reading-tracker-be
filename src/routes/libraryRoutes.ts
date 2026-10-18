@@ -9,32 +9,13 @@ export const libraryRouter = Router();
  * @openapi
  * /library:
  *   get:
- *     summary: Lấy danh sách sách trong tủ cá nhân
- *     description: Lọc theo trạng thái và phân trang, tính toán % tiến độ đọc
+ *     summary: Lấy toàn bộ danh sách sách trong tủ cá nhân
+ *     description: Lấy tất cả các sách trong thư viện
  *     tags:
  *       - Library
- *     parameters:
- *       - in: query
- *         name: status
- *         schema:
- *           type: integer
- *           enum: [0, 1, 2]
- *         description: 0 (Muốn đọc), 1 (Đang đọc), 2 (Đã đọc). Không truyền = lấy tất cả.
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Số trang
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *         description: Số lượng sách mỗi trang (tối đa 50)
  *     responses:
  *       200:
- *         description: Danh sách sách trong tủ
+ *         description: Danh sách toàn bộ sách trong tủ
  *         content:
  *           application/json:
  *             schema:
@@ -48,7 +29,6 @@ export const libraryRouter = Router();
  */
 libraryRouter.get(
   "/",
-  validateRequest(libraryValidation.getLibrary),
   libraryController.getLibrary,
 );
 

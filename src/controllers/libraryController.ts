@@ -19,22 +19,13 @@ export const libraryController = {
   },
 
   async getLibrary(
-    req: Request,
+    _req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> {
     try {
-      const status =
-        req.query.status !== undefined
-          ? parseInt(String(req.query.status), 10)
-          : undefined;
-      const page = req.query.page ? parseInt(String(req.query.page), 10) : 1;
-      const limit = req.query.limit
-        ? parseInt(String(req.query.limit), 10)
-        : 20;
-
-      const result = await libraryService.getLibrary(status, page, limit);
-      res.status(200).json(helpers.successResponse(result.data, result.meta));
+      const books = await libraryService.getLibrary();
+      res.status(200).json(helpers.successResponse(books));
     } catch (error) {
       next(error);
     }
