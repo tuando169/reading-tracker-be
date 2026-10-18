@@ -1,6 +1,6 @@
 import { libraryRepository } from '../repositories/libraryRepository.js';
 import { openLibraryService } from './openLibraryService.js';
-import { extractWorkId, parseDescription } from '../utils/helpers.js';
+import { helpers } from '../utils/helpers.js';
 import {
   LibraryBookRecord,
   LibraryBookResponse,
@@ -10,33 +10,13 @@ import { ReadingStatusEnum, ReadingStatusType } from '../config/constants.js';
 import { PaginationMeta } from '../types/apiTypes.js';
 import { AppError } from '../utils/appError.js';
 
-export function formatLibraryResponse(record: LibraryBookRecord): LibraryBookResponse {
-  return {
-    id: record.id,
-    workId: record.work_id,
-    title: record.title,
-    author: record.author,
-    coverUrl: record.cover_url,
-    description: record.description,
-    publishYear: record.publish_year,
-    status: record.status,
-    currentPage: record.current_page,
-    totalPages: record.total_pages,
-    rating: record.rating,
-    note: record.note,
-    startedAt: record.started_at ? new Date(record.started_at).toISOString() : null,
-    finishedAt: record.finished_at ? new Date(record.finished_at).toISOString() : null,
-    createdAt: new Date(record.created_at).toISOString(),
-    updatedAt: new Date(record.updated_at).toISOString()
-  };
-}
 
 export const libraryService = {
   /**
    * Thêm sách vào tủ cá nhân
    */
   async addToLibrary(workId: string, status: ReadingStatusType = ReadingStatusEnum.NotRead): Promise<LibraryBookResponse> {
-    const cleanId = extractWorkId(workId);
+    const cleanId = helpers.extractWorkId(workId);
 
     // 1. Kiểm tra tồn tại trong DB
     const existing = await libraryRepository.findByWorkId(cleanId);
@@ -56,7 +36,7 @@ export const libraryService = {
 
     if (workData) {
       title = workData.title || title;
-      description = parseDescription(workData.description);
+      description = helpers.parseDescription(workData.description);
       const coverId = Array.isArray(workData.covers) && workData.covers.length > 0 ? workData.covers[0] : undefined;
       coverUrl = openLibraryService.buildCoverUrl(coverId);
       subjects = Array.isArray(workData.subjects) ? workData.subjects.slice(0, 10) : [];
@@ -69,7 +49,7 @@ export const libraryService = {
     // Tra cứu thêm số trang và tên tác giả từ search API nếu work detail thiếu
     try {
       const searchRes = await openLibraryService.searchBooks(title, 1, 5);
-      const matched = searchRes.docs.find((d) => extractWorkId(d.key) === cleanId);
+      const matched = searchRes.docs.find((d) => helpers.extractWorkId(d.key) === cleanId);
       if (matched) {
         if (!author && matched.author_name?.length) {
           author = matched.author_name.join(', ');
@@ -206,3 +186,32 @@ export const libraryService = {
     return { id, deleted: true };
   }
 };
+
+function formatLibraryResponse(record: LibraryBookRecord): LibraryBookResponse {
+  const totalPages = record.total_pages;
+  const currentPage = record.current_page || 0;
+  let progressPercent = 0;
+  if (totalPages && totalPages > 0) {
+    progressPercent = Math.min(100, Math.round((currentPage / totalPages) * 10000) / 100);
+  }
+
+  return {
+    id: record.id,
+    workId: record.work_id,
+    title: record.title,
+    author: record.author,
+    coverUrl: record.cover_url,
+    description: record.description,
+    publishYear: record.publish_year,
+    status: record.status,
+    currentPage,
+    totalPages,
+    progressPercent,
+    rating: typeof record.rating === 'number' ? record.rating : 0,
+    note: typeof record.note === 'string' ? record.note : '',
+    startedAt: record.started_at ? new Date(record.started_at).toISOString() : null,
+    finishedAt: record.finished_at ? new Date(record.finished_at).toISOString() : null,
+    createdAt: new Date(record.created_at).toISOString(),
+    updatedAt: new Date(record.updated_at).toISOString()
+  };
+}

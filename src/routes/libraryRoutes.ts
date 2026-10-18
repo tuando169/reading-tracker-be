@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { LibraryController } from '../controllers/libraryController.js';
+import { libraryController } from '../controllers/libraryController.js';
 import { validateRequest } from '../middlewares/requestValidator.js';
-import { LibraryValidation } from '../validations/libraryValidation.js';
+import { libraryValidation } from '../validations/libraryValidation.js';
 
 export const libraryRouter = Router();
 
@@ -48,8 +48,8 @@ export const libraryRouter = Router();
  */
 libraryRouter.get(
   '/',
-  validateRequest(LibraryValidation.getLibrary),
-  LibraryController.getLibrary
+  validateRequest(libraryValidation.getLibrary),
+  libraryController.getLibrary
 );
 
 /**
@@ -84,8 +84,8 @@ libraryRouter.get(
  */
 libraryRouter.post(
   '/',
-  validateRequest(LibraryValidation.addBook),
-  LibraryController.addToLibrary
+  validateRequest(libraryValidation.addBook),
+  libraryController.addToLibrary
 );
 
 /**
@@ -127,8 +127,8 @@ libraryRouter.post(
  */
 libraryRouter.patch(
   '/:id',
-  validateRequest(LibraryValidation.updateProgress),
-  LibraryController.updateProgress
+  validateRequest(libraryValidation.updateProgress),
+  libraryController.updateProgress
 );
 
 /**
@@ -164,6 +164,6 @@ libraryRouter.patch(
  */
 libraryRouter.delete(
   '/:id',
-  validateRequest(LibraryValidation.idParam),
-  LibraryController.deleteFromLibrary
+  validateRequest(libraryValidation.idParam),
+  libraryController.deleteFromLibrary
 );

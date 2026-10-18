@@ -1,5 +1,5 @@
 import { openLibraryService } from './openLibraryService.js';
-import { Helpers } from '../utils/helpers.js';
+import { helpers } from '../utils/helpers.js';
 import { libraryRepository } from '../repositories/libraryRepository.js';
 import { BookSearchResultItem, BookDetail } from '../types/bookTypes.js';
 import { PaginationMeta } from '../types/apiTypes.js';
@@ -17,7 +17,7 @@ export const bookService = {
     const rawResult = await openLibraryService.searchBooks(keyword, page, limit);
 
     const items = rawResult.docs.map((doc) => {
-      const workId = Helpers.extractWorkId(doc.key);
+      const workId = helpers.extractWorkId(doc.key);
       const author = Array.isArray(doc.author_name) && doc.author_name.length > 0
         ? doc.author_name.join(', ')
         : null;
@@ -67,7 +67,7 @@ export const bookService = {
    * Xem chi tiết sách: ưu tiên từ DB MySQL nếu đã có, fallback sang Open Library
    */
   async getBookDetail(workId: string): Promise<BookDetail> {
-    const cleanId = extractWorkId(workId);
+    const cleanId = helpers.extractWorkId(workId);
 
     // 1. Kiểm tra trong DB MySQL
     const dbRecord = await libraryRepository.findByWorkId(cleanId);
@@ -109,7 +109,7 @@ export const bookService = {
 
     const coverId = Array.isArray(workData.covers) && workData.covers.length > 0 ? workData.covers[0] : undefined;
     const coverUrl = openLibraryService.buildCoverUrl(coverId);
-    const description = parseDescription(workData.description);
+    const description = helpers.parseDescription(workData.description);
 
     let publishYear: number | null = null;
     if (workData.first_publish_date) {

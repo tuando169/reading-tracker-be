@@ -1,6 +1,6 @@
 import { ApiResponse, PaginationMeta } from '../types/apiTypes.js';
 
-export const Helpers = {
+export const helpers = {
   /**
    * Tạo cấu trúc response thành công chuẩn { data, meta? }
    */
@@ -31,8 +31,3 @@ export const Helpers = {
     return null;
   }
 };
-
-// Aliases tương thích cũ
-export const successResponse = Helpers.successResponse;
-export const extractWorkId = Helpers.extractWorkId;
-export const parseDescription = Helpers.parseDescription;

@@ -4,11 +4,14 @@ import {
   OpenLibraryWorkResponse
 } from '../types/bookTypes.js';
 import { logger } from '../utils/logger.js';
-import { Helpers } from '../utils/helpers.js';
+import { helpers } from '../utils/helpers.js';
 
 const client: AxiosInstance = axios.create({
   baseURL: 'https://openlibrary.org',
   timeout: 8000,
+  headers: {
+    'User-Agent': 'MiniReadingTracker/1.0 (contact: student-project@readingtracker.local)'
+  }
 });
 
 export const openLibraryService = {
@@ -18,6 +21,10 @@ export const openLibraryService = {
   },
 
   async searchBooks(keyword: string, page: number = 1, limit: number = 20): Promise<OpenLibrarySearchResponse> {
+    if (!keyword || keyword.trim().length < 3) {
+      return { numFound: 0, start: 0, docs: [] };
+    }
+
     try {
       const response = await client.get<OpenLibrarySearchResponse>('/search.json', {
         params: {
@@ -28,12 +35,16 @@ export const openLibraryService = {
       });
       return response.data;
     } catch (error: any) {
+      if (error.response?.status === 422) {
+        // Open Library yêu cầu tối thiểu 3 ký tự
+        return { numFound: 0, start: 0, docs: [] };
+      }
       logger.error(`OpenLibrary searchBooks failed for "${keyword}": ${error.message}`);
       return { numFound: 0, start: 0, docs: [] };
     }
   },
   async getWorkDetail(workId: string): Promise<OpenLibraryWorkResponse | null> {
-    const cleanId = Helpers.extractWorkId(workId);
+    const cleanId = helpers.extractWorkId(workId);
     try {
       const response = await client.get<OpenLibraryWorkResponse>(`/works/${cleanId}.json`);
       return response.data;

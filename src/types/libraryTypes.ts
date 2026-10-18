@@ -31,6 +31,7 @@ export interface LibraryBookResponse {
   status: ReadingStatusType;
   currentPage: number;
   totalPages: number | null;
+  progressPercent: number;
   rating: number;
   note: string;
   startedAt: string | null;

@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { bookService } from '../services/bookService.js';
-import { Helpers } from '../utils/helpers.js';
+import { helpers } from '../utils/helpers.js';
 
-export const BookController = {
+export const bookController = {
   async searchBooks(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const keyword = String(req.query.keyword || '').trim();
@@ -10,7 +10,7 @@ export const BookController = {
       const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 20;
 
       const result = await bookService.searchBooks(keyword, page, limit);
-      res.status(200).json(Helpers.successResponse(result.data, result.meta));
+      res.status(200).json(helpers.successResponse(result.data, result.meta));
     } catch (error) {
       next(error);
     }
@@ -20,7 +20,7 @@ export const BookController = {
     try {
       const workId = String(req.params.workId);
       const result = await bookService.getBookDetail(workId);
-      res.status(200).json(Helpers.successResponse(result));
+      res.status(200).json(helpers.successResponse(result));
     } catch (error) {
       next(error);
     }

@@ -18,10 +18,6 @@ const swaggerOptions: swaggerJSDoc.Options = {
       {
         url: `http://localhost:${env.PORT}/api/v1`,
         description: 'Local Development Server'
-      },
-      {
-        url: 'https://reading-tracker-be.onrender.com/api/v1',
-        description: 'Production HTTPS Server'
       }
     ],
     components: {

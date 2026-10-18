@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { BookController } from '../controllers/bookController.js';
+import { bookController } from '../controllers/bookController.js';
 import { validateRequest } from '../middlewares/requestValidator.js';
-import { BookValidation } from '../validations/bookValidation.js';
+import { bookValidation } from '../validations/bookValidation.js';
 
 export const bookRouter = Router();
 
@@ -54,8 +54,8 @@ export const bookRouter = Router();
  */
 bookRouter.get(
   '/',
-  validateRequest(BookValidation.searchBooks),
-  BookController.searchBooks
+  validateRequest(bookValidation.searchBooks),
+  bookController.searchBooks
 );
 
 /**
@@ -93,6 +93,6 @@ bookRouter.get(
  */
 bookRouter.get(
   '/:workId',
-  validateRequest(BookValidation.workIdParam),
-  BookController.getBookDetail
+  validateRequest(bookValidation.workIdParam),
+  bookController.getBookDetail
 );
