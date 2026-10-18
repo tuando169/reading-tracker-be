@@ -88,8 +88,7 @@ Dữ liệu tủ sách được quản lý qua bảng `books`:
 ```mermaid
 erDiagram
     BOOKS {
-        int id PK "Tự tăng, Khóa chính"
-        string work_id UK "Unique Open Library Work ID (vd: OL82563W)"
+        varchar id PK "Khóa chính (Open Library Work ID, vd: OL82563W)"
         string title "Tên sách"
         string author "Tác giả"
         string cover_url "Link ảnh bìa"
@@ -115,13 +114,13 @@ Tài liệu API tương tác trực tiếp được tích hợp tại:
 
 ### Tóm tắt Endpoints:
 
-| Phương thức | Endpoint              | Mô tả                          | Tham số chính                                                                                                                                   |
-| :---------- | :-------------------- | :----------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET`       | `/api/v1/books`       | Tìm kiếm sách qua Open Library | Query: `keyword` (bắt buộc), `page` (default 1), `limit` (default 20, max 50). Trả về danh sách sách kèm cờ `inLibrary`.                        |
-| `GET`       | `/api/v1/library`     | Lấy danh sách sách trong tủ    | Query: `status` (0: Muốn đọc, 1: Đang đọc, 2: Đã đọc), `page`, `limit`.                                                                         |
-| `POST`      | `/api/v1/library`     | Thêm sách vào tủ cá nhân       | Body: `{ workId: string, status?: number }`. Tự động fetch metadata từ Open Library, lưu MySQL. Trả về `409` nếu sách đã tồn tại.               |
-| `PATCH`     | `/api/v1/library/:id` | Cập nhật tiến độ / Đánh giá    | Params: `id`. Body: `{ currentPage?: number, status?: number, rating?: number, note?: string }`. Tự động set `status = 2` khi đọc hết số trang. |
-| `DELETE`    | `/api/v1/library/:id` | Xóa sách khỏi tủ cá nhân       | Params: `id`.                                                                                                                                   |
+| Phương thức | Endpoint              | Mô tả                          | Tham số chính                                                                                                                 |
+| :---------- | :-------------------- | :----------------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
+| `GET`       | `/api/v1/books`       | Tìm kiếm sách qua Open Library | Query: `keyword` (bắt buộc), `page` (default 1), `limit` (default 20, max 50). Trả về danh sách sách kèm cờ `inLibrary`.      |
+| `GET`       | `/api/v1/library`     | Lấy danh sách sách trong tủ    | Query: `status` (0: Muốn đọc, 1: Đang đọc, 2: Đã đọc), `page`, `limit`.                                                       |
+| `POST`      | `/api/v1/library`     | Thêm sách vào tủ cá nhân       | Body: `{ id: string, status?: number }`. Tự động fetch metadata từ Open Library, lưu MySQL. Trả về `409` nếu sách đã tồn tại. |
+| `PATCH`     | `/api/v1/library`     | Cập nhật tiến độ / Đánh giá    | Body: `{ id: string, currentPage?: number, rating?: number, note?: string }`.                                                 |
+| `DELETE`    | `/api/v1/library/:id` | Xóa sách khỏi tủ cá nhân       | Params: `id`.                                                                                                                 |
 
 ### Chuẩn hóa Response & Error
 

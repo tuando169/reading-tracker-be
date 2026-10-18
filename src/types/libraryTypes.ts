@@ -1,8 +1,7 @@
 import { ReadingStatusType } from '../config/constants.js';
 
 export interface LibraryBookRecord {
-  id: number;
-  work_id: string;
+  id: string;
   title: string;
   author: string | null;
   cover_url: string | null;
@@ -21,8 +20,7 @@ export interface LibraryBookRecord {
 }
 
 export interface LibraryBookResponse {
-  id: number;
-  workId: string;
+  id: string;
   title: string;
   author: string | null;
   coverUrl: string | null;
@@ -41,7 +39,7 @@ export interface LibraryBookResponse {
 }
 
 export interface CreateLibraryBookDTO {
-  workId: string;
+  id: string;
   title: string;
   author: string | null;
   coverUrl: string | null;
@@ -53,7 +51,7 @@ export interface CreateLibraryBookDTO {
 }
 
 export interface UpdateLibraryBookDTO {
-  status?: ReadingStatusType;
+  id: string;
   currentPage?: number;
   rating?: number;
   note?: string;

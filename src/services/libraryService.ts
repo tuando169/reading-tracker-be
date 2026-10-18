@@ -1,32 +1,33 @@
-import { libraryRepository } from '../repositories/libraryRepository.js';
-import { openLibraryService } from './openLibraryService.js';
-import { helpers } from '../utils/helpers.js';
+import { libraryRepository } from "../repositories/libraryRepository.js";
+import { openLibraryService } from "./openLibraryService.js";
+import { helpers } from "../utils/helpers.js";
 import {
   LibraryBookRecord,
   LibraryBookResponse,
-  UpdateLibraryBookDTO
-} from '../types/libraryTypes.js';
-import { ReadingStatusEnum, ReadingStatusType } from '../config/constants.js';
-import { PaginationMeta } from '../types/apiTypes.js';
-import { AppError } from '../utils/appError.js';
-
+  UpdateLibraryBookDTO,
+} from "../types/libraryTypes.js";
+import { ReadingStatusEnum, ReadingStatusType } from "../config/constants.js";
+import { PaginationMeta } from "../types/apiTypes.js";
+import { AppError } from "../utils/appError.js";
 
 export const libraryService = {
-  /**
-   * Thêm sách vào tủ cá nhân
-   */
-  async addToLibrary(workId: string, status: ReadingStatusType = ReadingStatusEnum.NotRead): Promise<LibraryBookResponse> {
-    const cleanId = helpers.extractWorkId(workId);
+  async addToLibrary(
+    id: string,
+    status: ReadingStatusType = ReadingStatusEnum.NotRead,
+  ): Promise<LibraryBookResponse> {
+    const cleanId = helpers.extractWorkId(id);
 
-    // 1. Kiểm tra tồn tại trong DB
-    const existing = await libraryRepository.findByWorkId(cleanId);
+    const existing = await libraryRepository.findById(cleanId);
     if (existing) {
-      throw new AppError(409, 'BOOK_ALREADY_EXISTS', 'Sách đã tồn tại trong tủ sách cá nhân');
+      throw new AppError(
+        409,
+        "BOOK_ALREADY_EXISTS",
+        "Sách đã tồn tại trong tủ sách cá nhân",
+      );
     }
 
-    // 2. Fetch metadata từ Open Library
     const workData = await openLibraryService.getWorkDetail(cleanId);
-    let title = 'Không có tiêu đề';
+    let title = "Không có tiêu đề";
     let author: string | null = null;
     let coverUrl: string | null = null;
     let description: string | null = null;
@@ -37,22 +38,28 @@ export const libraryService = {
     if (workData) {
       title = workData.title || title;
       description = helpers.parseDescription(workData.description);
-      const coverId = Array.isArray(workData.covers) && workData.covers.length > 0 ? workData.covers[0] : undefined;
+      const coverId =
+        Array.isArray(workData.covers) && workData.covers.length > 0
+          ? workData.covers[0]
+          : undefined;
       coverUrl = openLibraryService.buildCoverUrl(coverId);
-      subjects = Array.isArray(workData.subjects) ? workData.subjects.slice(0, 10) : [];
+      subjects = Array.isArray(workData.subjects)
+        ? workData.subjects.slice(0, 10)
+        : [];
       if (workData.first_publish_date) {
         const match = workData.first_publish_date.match(/\b\d{4}\b/);
         if (match) publishYear = parseInt(match[0], 10);
       }
     }
 
-    // Tra cứu thêm số trang và tên tác giả từ search API nếu work detail thiếu
     try {
       const searchRes = await openLibraryService.searchBooks(title, 1, 5);
-      const matched = searchRes.docs.find((d) => helpers.extractWorkId(d.key) === cleanId);
+      const matched = searchRes.docs.find(
+        (d) => helpers.extractWorkId(d.key) === cleanId,
+      );
       if (matched) {
         if (!author && matched.author_name?.length) {
-          author = matched.author_name.join(', ');
+          author = matched.author_name.join(", ");
         }
         if (!totalPages && matched.number_of_pages_median) {
           totalPages = matched.number_of_pages_median;
@@ -64,13 +71,10 @@ export const libraryService = {
           coverUrl = openLibraryService.buildCoverUrl(matched.cover_i);
         }
       }
-    } catch {
-      // Bỏ qua lỗi fallback
-    }
+    } catch {}
 
-    // 3. Thêm vào MySQL
-    const newId = await libraryRepository.create({
-      workId: cleanId,
+    await libraryRepository.create({
+      id: cleanId,
       title,
       author,
       coverUrl,
@@ -78,26 +82,27 @@ export const libraryService = {
       publishYear,
       totalPages,
       subjects,
-      status
+      status,
     });
 
-    const createdRecord = await libraryRepository.findById(newId);
+    const createdRecord = await libraryRepository.findById(cleanId);
     if (!createdRecord) {
-      throw new AppError(500, 'CREATE_FAILED', 'Không thể tạo bản ghi tủ sách');
+      throw new AppError(500, "CREATE_FAILED", "Không thể tạo bản ghi tủ sách");
     }
 
     return formatLibraryResponse(createdRecord);
   },
 
-  /**
-   * Lấy danh sách tủ sách có phân trang
-   */
   async getLibrary(
     status?: number,
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<{ data: LibraryBookResponse[]; meta: PaginationMeta }> {
-    const { items, total } = await libraryRepository.findMany(status, page, limit);
+    const { items, total } = await libraryRepository.findMany(
+      status,
+      page,
+      limit,
+    );
     const data = items.map(formatLibraryResponse);
     const totalPages = Math.ceil(total / limit) || 0;
 
@@ -107,49 +112,60 @@ export const libraryService = {
         page,
         limit,
         total,
-        totalPages
-      }
+        totalPages,
+      },
     };
   },
 
-  /**
-   * Cập nhật tiến độ, đánh giá, ghi chú và tự động chuyển trạng thái
-   */
-  async updateProgress(id: number, payload: UpdateLibraryBookDTO): Promise<LibraryBookResponse> {
+  async updateProgress(
+    payload: UpdateLibraryBookDTO,
+  ): Promise<LibraryBookResponse> {
+    const { id } = payload;
     const currentRecord = await libraryRepository.findById(id);
     if (!currentRecord) {
-      throw new AppError(404, 'BOOK_NOT_FOUND', `Không tìm thấy sách trong tủ với id ${id}`);
+      throw new AppError(
+        404,
+        "BOOK_NOT_FOUND",
+        `Không tìm thấy sách trong tủ với id ${id}`,
+      );
     }
 
     const totalPages = currentRecord.total_pages;
-    const targetPage = payload.currentPage !== undefined ? payload.currentPage : currentRecord.current_page;
+    const targetPage =
+      payload.currentPage !== undefined
+        ? payload.currentPage
+        : currentRecord.current_page;
 
     // Validate currentPage không vượt quá totalPages nếu totalPages tồn tại
     if (totalPages && totalPages > 0 && targetPage > totalPages) {
-      throw new AppError(400, 'INVALID_PAGE', `Số trang hiện tại (${targetPage}) không được vượt quá tổng số trang (${totalPages})`);
+      throw new AppError(
+        400,
+        "INVALID_PAGE",
+        `Số trang hiện tại (${targetPage}) không được vượt quá tổng số trang (${totalPages})`,
+      );
     }
 
-    let nextStatus = payload.status !== undefined ? payload.status : currentRecord.status;
+    let nextStatus = currentRecord.status;
+    let startedAt = currentRecord.started_at
+      ? new Date(currentRecord.started_at)
+      : null;
+    let finishedAt = currentRecord.finished_at
+      ? new Date(currentRecord.finished_at)
+      : null;
 
-    // Tự động hoàn thành nếu đọc hết trang
-    if (totalPages && totalPages > 0 && targetPage >= totalPages) {
-      nextStatus = ReadingStatusEnum.Completed;
-    }
-
-    let startedAt = currentRecord.started_at ? new Date(currentRecord.started_at) : null;
-    let finishedAt = currentRecord.finished_at ? new Date(currentRecord.finished_at) : null;
-
-    // Lần đầu chuyển sang ĐANG ĐỌC (status = 1) -> ghi nhận started_at
-    if (nextStatus === ReadingStatusEnum.Reading && !startedAt) {
-      startedAt = new Date();
-    }
-
-    // Chuyển sang ĐÃ ĐỌC (status = 2) -> ghi nhận finished_at
-    if (nextStatus === ReadingStatusEnum.Completed) {
-      if (!finishedAt) finishedAt = new Date();
-    } else if (payload.status !== undefined && payload.status < ReadingStatusEnum.Completed) {
-      // Chuyển lùi về Muốn đọc hoặc Đang đọc -> reset finished_at = null
-      finishedAt = null;
+    // Tự động tính toán status dựa trên currentPage
+    if (payload.currentPage !== undefined) {
+      if (targetPage === 0) {
+        nextStatus = ReadingStatusEnum.NotRead;
+        finishedAt = null;
+      } else if (totalPages && totalPages > 0 && targetPage >= totalPages) {
+        nextStatus = ReadingStatusEnum.Completed;
+        if (!finishedAt) finishedAt = new Date();
+      } else {
+        nextStatus = ReadingStatusEnum.Reading;
+        finishedAt = null;
+        if (!startedAt) startedAt = new Date();
+      }
     }
 
     await libraryRepository.update(id, {
@@ -158,12 +174,16 @@ export const libraryService = {
       rating: payload.rating,
       note: payload.note,
       startedAt,
-      finishedAt
+      finishedAt,
     });
 
     const updatedRecord = await libraryRepository.findById(id);
     if (!updatedRecord) {
-      throw new AppError(500, 'UPDATE_FAILED', 'Không thể lấy thông tin cập nhật');
+      throw new AppError(
+        500,
+        "UPDATE_FAILED",
+        "Không thể lấy thông tin cập nhật",
+      );
     }
 
     return formatLibraryResponse(updatedRecord);
@@ -172,19 +192,25 @@ export const libraryService = {
   /**
    * Xóa sách khỏi tủ cá nhân
    */
-  async deleteFromLibrary(id: number): Promise<{ id: number; deleted: boolean }> {
+  async deleteFromLibrary(
+    id: string,
+  ): Promise<{ id: string; deleted: boolean }> {
     const existing = await libraryRepository.findById(id);
     if (!existing) {
-      throw new AppError(404, 'BOOK_NOT_FOUND', `Không tìm thấy sách trong tủ với id ${id}`);
+      throw new AppError(
+        404,
+        "BOOK_NOT_FOUND",
+        `Không tìm thấy sách trong tủ với id ${id}`,
+      );
     }
 
     const success = await libraryRepository.delete(id);
     if (!success) {
-      throw new AppError(500, 'DELETE_FAILED', 'Không thể xóa sách khỏi tủ');
+      throw new AppError(500, "DELETE_FAILED", "Không thể xóa sách khỏi tủ");
     }
 
     return { id, deleted: true };
-  }
+  },
 };
 
 function formatLibraryResponse(record: LibraryBookRecord): LibraryBookResponse {
@@ -192,12 +218,14 @@ function formatLibraryResponse(record: LibraryBookRecord): LibraryBookResponse {
   const currentPage = record.current_page || 0;
   let progressPercent = 0;
   if (totalPages && totalPages > 0) {
-    progressPercent = Math.min(100, Math.round((currentPage / totalPages) * 10000) / 100);
+    progressPercent = Math.min(
+      100,
+      Math.round((currentPage / totalPages) * 10000) / 100,
+    );
   }
 
   return {
     id: record.id,
-    workId: record.work_id,
     title: record.title,
     author: record.author,
     coverUrl: record.cover_url,
@@ -207,11 +235,15 @@ function formatLibraryResponse(record: LibraryBookRecord): LibraryBookResponse {
     currentPage,
     totalPages,
     progressPercent,
-    rating: typeof record.rating === 'number' ? record.rating : 0,
-    note: typeof record.note === 'string' ? record.note : '',
-    startedAt: record.started_at ? new Date(record.started_at).toISOString() : null,
-    finishedAt: record.finished_at ? new Date(record.finished_at).toISOString() : null,
+    rating: typeof record.rating === "number" ? record.rating : 0,
+    note: typeof record.note === "string" ? record.note : "",
+    startedAt: record.started_at
+      ? new Date(record.started_at).toISOString()
+      : null,
+    finishedAt: record.finished_at
+      ? new Date(record.finished_at).toISOString()
+      : null,
     createdAt: new Date(record.created_at).toISOString(),
-    updatedAt: new Date(record.updated_at).toISOString()
+    updatedAt: new Date(record.updated_at).toISOString(),
   };
 }

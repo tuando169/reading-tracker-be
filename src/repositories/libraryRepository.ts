@@ -8,34 +8,9 @@ import {
 
 export const libraryRepository = {
   /**
-   * Kiểm tra và lấy bản ghi theo workId
+   * Tìm bản ghi theo ID (chính là OpenLibrary workId, ví dụ: OL82563W)
    */
-  async findByWorkId(workId: string): Promise<LibraryBookRecord | null> {
-    const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT * FROM books WHERE work_id = ? LIMIT 1',
-      [workId]
-    );
-    if (!rows.length) return null;
-    return rows[0] as LibraryBookRecord;
-  },
-
-  /**
-   * Tìm nhiều bản ghi theo danh sách workIds
-   */
-  async findByWorkIds(workIds: string[]): Promise<LibraryBookRecord[]> {
-    if (!workIds.length) return [];
-    const placeholders = workIds.map(() => '?').join(',');
-    const [rows] = await pool.execute<RowDataPacket[]>(
-      `SELECT * FROM books WHERE work_id IN (${placeholders})`,
-      workIds
-    );
-    return rows as LibraryBookRecord[];
-  },
-
-  /**
-   * Tìm bản ghi theo ID khóa chính
-   */
-  async findById(id: number): Promise<LibraryBookRecord | null> {
+  async findById(id: string): Promise<LibraryBookRecord | null> {
     const [rows] = await pool.execute<RowDataPacket[]>(
       'SELECT * FROM books WHERE id = ? LIMIT 1',
       [id]
@@ -45,20 +20,33 @@ export const libraryRepository = {
   },
 
   /**
+   * Tìm nhiều bản ghi theo danh sách IDs
+   */
+  async findByIds(ids: string[]): Promise<LibraryBookRecord[]> {
+    if (!ids.length) return [];
+    const placeholders = ids.map(() => '?').join(',');
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `SELECT * FROM books WHERE id IN (${placeholders})`,
+      ids
+    );
+    return rows as LibraryBookRecord[];
+  },
+
+  /**
    * Thêm sách mới vào tủ
    */
-  async create(data: CreateLibraryBookDTO): Promise<number> {
+  async create(data: CreateLibraryBookDTO): Promise<string> {
     const startedAt = data.status === 1 ? new Date() : null;
     const subjectsJson = JSON.stringify(data.subjects || []);
 
-    const [result] = await pool.execute<ResultSetHeader>(
+    await pool.execute<ResultSetHeader>(
       `INSERT INTO books (
-        work_id, title, author, cover_url, description, 
+        id, title, author, cover_url, description, 
         publish_year, total_pages, subjects, status, current_page, 
         rating, note, started_at, finished_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, '', ?, NULL)`,
       [
-        data.workId,
+        data.id,
         data.title,
         data.author,
         data.coverUrl,
@@ -71,7 +59,7 @@ export const libraryRepository = {
       ]
     );
 
-    return result.insertId;
+    return data.id;
   },
 
   /**
@@ -114,7 +102,7 @@ export const libraryRepository = {
    * Cập nhật bản ghi trong tủ sách
    */
   async update(
-    id: number,
+    id: string,
     data: {
       status?: number;
       currentPage?: number;
@@ -166,7 +154,7 @@ export const libraryRepository = {
   /**
    * Xóa bản ghi theo ID
    */
-  async delete(id: number): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const [result] = await pool.execute<ResultSetHeader>(
       'DELETE FROM books WHERE id = ?',
       [id]

@@ -44,8 +44,8 @@ export const openLibraryService = {
       return { numFound: 0, start: 0, docs: [] };
     }
   },
-  async getWorkDetail(workId: string): Promise<OpenLibraryWorkResponse | null> {
-    const cleanId = helpers.extractWorkId(workId);
+  async getWorkDetail(id: string): Promise<OpenLibraryWorkResponse | null> {
+    const cleanId = helpers.extractWorkId(id);
     try {
       const response = await client.get<OpenLibraryWorkResponse>(`/works/${cleanId}.json`);
       return response.data;
@@ -53,7 +53,7 @@ export const openLibraryService = {
       if (error.response?.status === 404) {
         return null;
       }
-      logger.error(`OpenLibrary getWorkDetail failed for "${workId}": ${error.message}`);
+      logger.error(`OpenLibrary getWorkDetail failed for "${id}": ${error.message}`);
       return null;
     }
   }

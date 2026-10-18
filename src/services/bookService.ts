@@ -1,53 +1,57 @@
-import { openLibraryService } from './openLibraryService.js';
-import { helpers } from '../utils/helpers.js';
-import { libraryRepository } from '../repositories/libraryRepository.js';
-import { BookSearchResultItem } from '../types/bookTypes.js';
-import { PaginationMeta } from '../types/apiTypes.js';
+import { openLibraryService } from "./openLibraryService.js";
+import { helpers } from "../utils/helpers.js";
+import { libraryRepository } from "../repositories/libraryRepository.js";
+import { BookSearchResultItem } from "../types/bookTypes.js";
+import { PaginationMeta } from "../types/apiTypes.js";
+import { logger } from "../utils/logger.js";
 
 export const bookService = {
-  /**
-   * Tìm kiếm sách và làm giàu trạng thái inLibrary qua MySQL
-   */
   async searchBooks(
     keyword: string,
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<{ data: BookSearchResultItem[]; meta: PaginationMeta }> {
-    const rawResult = await openLibraryService.searchBooks(keyword, page, limit);
+    const rawResult = await openLibraryService.searchBooks(
+      keyword,
+      page,
+      limit,
+    );
 
     const items: BookSearchResultItem[] = rawResult.docs.map((doc) => {
-      const workId = helpers.extractWorkId(doc.key);
-      const author = Array.isArray(doc.author_name) && doc.author_name.length > 0
-        ? doc.author_name.join(', ')
-        : null;
+      const id = helpers.extractWorkId(doc.key);
+      const author =
+        Array.isArray(doc.author_name) && doc.author_name.length > 0
+          ? doc.author_name.join(", ")
+          : null;
       const coverUrl = openLibraryService.buildCoverUrl(doc.cover_i);
 
-      const subjects = Array.isArray(doc.subject) ? doc.subject.slice(0, 10) : [];
-
+      const subjects = Array.isArray(doc.subject)
+        ? doc.subject.slice(0, 10)
+        : [];
+      logger.info(doc.subject);
       return {
-        id: null,
-        workId,
-        title: doc.title || 'Không có tiêu đề',
+        id,
+        title: doc.title,
         author,
         description: null,
         publishYear: doc.first_publish_year || null,
         totalPages: doc.number_of_pages_median || null,
         subjects,
         coverUrl,
-        inLibrary: false
+        inLibrary: false,
       };
     });
 
-    const workIds = items.map((item) => item.workId).filter(Boolean);
-    const existingBooks = await libraryRepository.findByWorkIds(workIds);
+    const ids = items.map((item) => item.id).filter(Boolean);
+    const existingBooks = await libraryRepository.findByIds(ids);
 
     const existingMap = new Map<string, (typeof existingBooks)[0]>();
     for (const b of existingBooks) {
-      existingMap.set(b.work_id, b);
+      existingMap.set(b.id, b);
     }
 
     for (const item of items) {
-      const existing = existingMap.get(item.workId);
+      const existing = existingMap.get(item.id);
       if (existing) {
         item.inLibrary = true;
         item.id = existing.id;
@@ -74,9 +78,8 @@ export const bookService = {
         page,
         limit,
         total,
-        totalPages
-      }
+        totalPages,
+      },
     };
-  }
+  },
 };
-

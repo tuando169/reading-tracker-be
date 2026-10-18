@@ -1,6 +1,5 @@
 export interface BookSearchResultItem {
-  id: number | null;
-  workId: string;
+  id: string ;
   title: string;
   author: string | null;
   description: string | null;

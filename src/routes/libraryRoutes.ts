@@ -1,7 +1,7 @@
-import { Router } from 'express';
-import { libraryController } from '../controllers/libraryController.js';
-import { validateRequest } from '../middlewares/requestValidator.js';
-import { libraryValidation } from '../validations/libraryValidation.js';
+import { Router } from "express";
+import { libraryController } from "../controllers/libraryController.js";
+import { validateRequest } from "../middlewares/requestValidator.js";
+import { libraryValidation } from "../validations/libraryValidation.js";
 
 export const libraryRouter = Router();
 
@@ -47,9 +47,9 @@ export const libraryRouter = Router();
  *                         $ref: '#/components/schemas/LibraryBook'
  */
 libraryRouter.get(
-  '/',
+  "/",
   validateRequest(libraryValidation.getLibrary),
-  libraryController.getLibrary
+  libraryController.getLibrary,
 );
 
 /**
@@ -83,26 +83,19 @@ libraryRouter.get(
  *         description: Sách đã tồn tại trong tủ cá nhân
  */
 libraryRouter.post(
-  '/',
+  "/",
   validateRequest(libraryValidation.addBook),
-  libraryController.addToLibrary
+  libraryController.addToLibrary,
 );
 
 /**
  * @openapi
- * /library/{id}:
+ * /library:
  *   patch:
  *     summary: Cập nhật tiến độ đọc, trạng thái, đánh giá hoặc ghi chú
  *     description: Tự động ghi nhận mốc started_at/finished_at và tự động hoàn thành khi đọc hết số trang
  *     tags:
  *       - Library
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID khóa chính bản ghi sách trong MySQL
  *     requestBody:
  *       required: true
  *       content:
@@ -126,9 +119,15 @@ libraryRouter.post(
  *         description: Không tìm thấy sách trong tủ
  */
 libraryRouter.patch(
-  '/:id',
+  "/",
   validateRequest(libraryValidation.updateProgress),
-  libraryController.updateProgress
+  libraryController.updateProgress,
+);
+
+libraryRouter.patch(
+  "/:id",
+  validateRequest(libraryValidation.updateProgress),
+  libraryController.updateProgress,
 );
 
 /**
@@ -143,8 +142,8 @@ libraryRouter.patch(
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
- *         description: ID bản ghi sách trong MySQL
+ *           type: string
+ *         description: ID sách (ví dụ OL82563W)
  *     responses:
  *       200:
  *         description: Xóa thành công
@@ -156,14 +155,14 @@ libraryRouter.patch(
  *                   type: object
  *                   properties:
  *                     id:
- *                       type: integer
+ *                       type: string
  *                     deleted:
  *                       type: boolean
  *       404:
  *         description: Không tìm thấy sách trong tủ
  */
 libraryRouter.delete(
-  '/:id',
+  "/:id",
   validateRequest(libraryValidation.idParam),
-  libraryController.deleteFromLibrary
+  libraryController.deleteFromLibrary,
 );
