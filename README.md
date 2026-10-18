@@ -117,18 +117,18 @@ Tài liệu API tương tác trực tiếp được tích hợp tại:
 | Phương thức | Endpoint              | Mô tả                          | Tham số chính                                                                                                                 |
 | :---------- | :-------------------- | :----------------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
 | `GET`       | `/api/v1/books`       | Tìm kiếm sách qua Open Library | Query: `keyword` (bắt buộc), `page` (default 1), `limit` (default 20, max 50). Trả về danh sách sách kèm cờ `inLibrary`.      |
-| `GET`       | `/api/v1/library`     | Lấy danh sách sách trong tủ    | Query: `status` (0: Muốn đọc, 1: Đang đọc, 2: Đã đọc), `page`, `limit`.                                                       |
+| `GET`       | `/api/v1/library`     | Lấy toàn bộ sách trong tủ      | Không cần tham số. Lấy tất cả sách kèm tiến độ, đánh giá, ghi chú và thể loại.                                                |
 | `POST`      | `/api/v1/library`     | Thêm sách vào tủ cá nhân       | Body: `{ id: string, status?: number }`. Tự động fetch metadata từ Open Library, lưu MySQL. Trả về `409` nếu sách đã tồn tại. |
 | `PATCH`     | `/api/v1/library`     | Cập nhật tiến độ / Đánh giá    | Body: `{ id: string, currentPage?: number, rating?: number, note?: string }`.                                                 |
 | `DELETE`    | `/api/v1/library/:id` | Xóa sách khỏi tủ cá nhân       | Params: `id`.                                                                                                                 |
 
 ### Chuẩn hóa Response & Error
 
-- **Thành công (200 / 201):**
+- **Thành công khi tìm kiếm sách (`/api/v1/books` - có phân trang):**
 
   ```json
   {
-    "data": { ... },
+    "data": [ ... ],
     "meta": {
       "page": 1,
       "limit": 20,

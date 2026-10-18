@@ -114,6 +114,17 @@ const swaggerOptions: swaggerJSDoc.Options = {
               nullable: true,
               example: "https://covers.openlibrary.org/b/id/10521270-M.jpg",
             },
+            description: {
+              type: "string",
+              nullable: true,
+              example: "Harry Potter has never even heard of Hogwarts...",
+            },
+            publishYear: { type: "integer", nullable: true, example: 1997 },
+            subjects: {
+              type: "array",
+              items: { type: "string" },
+              example: ["Fantasy", "Magic"],
+            },
             status: {
               type: "integer",
               enum: [0, 1, 2],
@@ -122,6 +133,7 @@ const swaggerOptions: swaggerJSDoc.Options = {
             },
             currentPage: { type: "integer", example: 100 },
             totalPages: { type: "integer", nullable: true, example: 223 },
+            progressPercent: { type: "number", example: 44.84 },
             rating: { type: "integer", minimum: 0, maximum: 5, example: 4 },
             note: { type: "string", example: "Sách rất lôi cuốn" },
             startedAt: { type: "string", format: "date-time", nullable: true },
@@ -151,7 +163,10 @@ const swaggerOptions: swaggerJSDoc.Options = {
       },
     },
   },
-  apis: ["./src/routes/*.ts", "./dist/routes/*.js"],
+  apis:
+    env.NODE_ENV === "production"
+      ? ["./dist/routes/*.js"]
+      : ["./src/routes/*.ts"],
 };
 
 export const swaggerSpec = swaggerJSDoc(swaggerOptions);

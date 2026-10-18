@@ -35,21 +35,22 @@ export const libraryService = {
     let totalPages: number | null = null;
     let subjects: string[] = [];
 
-    if (workData) {
-      title = workData.title || title;
-      description = helpers.parseDescription(workData.description);
-      const coverId =
-        Array.isArray(workData.covers) && workData.covers.length > 0
-          ? workData.covers[0]
-          : undefined;
-      coverUrl = openLibraryService.buildCoverUrl(coverId);
-      subjects = Array.isArray(workData.subjects)
-        ? workData.subjects.slice(0, 10)
-        : [];
-      if (workData.first_publish_date) {
-        const match = workData.first_publish_date.match(/\b\d{4}\b/);
-        if (match) publishYear = parseInt(match[0], 10);
-      }
+    if (!workData)
+      throw new AppError(404, "BOOK_NOT_FOUND", "Không tìm thấy sách");
+
+    title = workData.title || title;
+    description = helpers.parseDescription(workData.description);
+    const coverId =
+      Array.isArray(workData.covers) && workData.covers.length > 0
+        ? workData.covers[0]
+        : undefined;
+    coverUrl = openLibraryService.buildCoverUrl(coverId);
+    subjects = Array.isArray(workData.subjects)
+      ? workData.subjects.slice(0, 10)
+      : [];
+    if (workData.first_publish_date) {
+      const match = workData.first_publish_date.match(/\b\d{4}\b/);
+      if (match) publishYear = parseInt(match[0], 10);
     }
 
     try {
@@ -74,9 +75,7 @@ export const libraryService = {
     } catch {}
 
     const currentPage =
-      status === ReadingStatusEnum.Completed && totalPages
-        ? totalPages
-        : 0;
+      status === ReadingStatusEnum.Completed && totalPages ? totalPages : 0;
 
     await libraryRepository.create({
       id: cleanId,

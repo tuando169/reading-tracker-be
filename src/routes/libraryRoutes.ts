@@ -19,18 +19,14 @@ export const libraryRouter = Router();
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ApiResponse'
- *                 - properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/LibraryBook'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/LibraryBook'
  */
-libraryRouter.get(
-  "/",
-  libraryController.getLibrary,
-);
+libraryRouter.get("/", libraryController.getLibrary);
 
 /**
  * @openapi
